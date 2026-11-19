@@ -1,0 +1,18 @@
+# environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+
+# data that contains raw comment text: rebuilt by the scripts, never committed
+# (KazSAnDRA is public, but comments can mention names - see README "Personal data")
+data/raw/
+data/interim/
+data/processed/
+data/labeling/to_review.csv
+results/errors.csv

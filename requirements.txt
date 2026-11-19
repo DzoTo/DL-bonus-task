@@ -1,0 +1,9 @@
+# Python 3.10+ (tested on 3.10.8, Windows 10, and Colab)
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+joblib==1.6.0
+matplotlib==3.10.9
+PyYAML==6.0.3
+requests==2.34.2
+pytest==9.2.0

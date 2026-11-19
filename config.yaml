@@ -1,0 +1,50 @@
+# Single source of truth for every tunable number in the pipeline.
+seed: 42
+
+paths:
+  raw_dir: data/raw
+  interim_dir: data/interim
+  labeling_dir: data/labeling
+  processed_dir: data/processed
+  challenge_file: data/challenge/challenge.csv
+  synthetic_dir: data/synthetic
+  model_file: models/model.joblib
+  results_dir: results
+
+source:
+  # KazSAnDRA (ISSAI, CC BY 4.0) - score-classification files keep the 1-5 star rating.
+  base_url: https://raw.githubusercontent.com/IS2AI/KazSAnDRA/main/dataset
+  files: [06_sc_train_ib, 09_sc_valid, 10_sc_test]
+
+prepare:
+  n_angry_negatives: 2500   # 1-2 star reviews with no lexicon hit  -> label 0
+  n_other_negatives: 2500   # 3-5 star reviews with no lexicon hit  -> label 0
+  n_hard_negatives: 500     # contain an insult that is NOT profanity (ақымақ, дебил) -> label 0
+  n_audit_per_class: 30     # random auto-labelled rows sent to manual review to measure label noise
+  min_letters: 2            # drop comments with fewer letters than this
+
+split:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+
+model:
+  normalize: canonical      # canonical() from kzprofanity.text before vectorising
+  augment_mask_frac: 0.3    # masked copies of 30% of train rows per class (0 = off); see train.py
+  features:
+    analyzer: char_wb
+    ngram_range: [2, 5]
+    min_df: 2
+    sublinear_tf: true
+    max_features: 300000
+  classifier:
+    C: 1.0
+    class_weight: balanced
+    max_iter: 3000
+  # Grid searched on the VALIDATION set only. Best combo overrides the defaults above.
+  search:
+    C: [0.1, 1.0, 10.0, 30.0, 100.0]
+    ngram_range: [[1, 3], [2, 5], [3, 6]]
+  threshold:
+    strategy: max_f1        # max_f1 | min_recall
+    min_recall: 0.95        # used only when strategy == min_recall
