@@ -20,7 +20,7 @@ from .config import load_config, path, save_json, set_seed
 from .lexicon import find_hits, lexicon_label
 from .text import canonical, dedupe_key, letter_count, scrub_pii
 
-REVIEW_COLUMNS = ["id", "text", "stars", "domain", "hits", "review_reason", "label", "note"]
+REVIEW_COLUMNS = ["id", "text", "stars", "domain", "hits", "review_reason", "suggested", "why", "label", "note"]
 
 
 def download(cfg: dict) -> pd.DataFrame:
@@ -120,8 +120,15 @@ def write_review_queue(cand: pd.DataFrame, cfg: dict, stats: dict) -> None:
     lab_dir.mkdir(parents=True, exist_ok=True)
     out_file = lab_dir / "to_review.csv"
     queue = cand[cand["review_reason"] != ""][["id", "text", "stars", "domain", "hits", "review_reason"]].copy()
-    queue["label"] = ""
-    queue["note"] = ""
+    for c in ("suggested", "why", "label", "note"):
+        queue[c] = ""
+    # optional pre-filled suggestions (columns suggested/why) survive a re-run; they are hints only,
+    # make_splits uses nothing but the "label" column you fill in
+    if out_file.exists():
+        prev = read_review(out_file).set_index("id")
+        for c in ("suggested", "why"):
+            if c in prev:
+                queue[c] = queue["id"].map(prev[c]).fillna("")
     # carry over labels already typed in a previous run (to_review.csv locally, or the committed
     # manual_labels.csv after a fresh clone)
     sources = [f for f in (lab_dir / "manual_labels.csv", out_file) if f.exists()]
@@ -143,7 +150,7 @@ def write_review_queue(cand: pd.DataFrame, cfg: dict, stats: dict) -> None:
 def read_review(p) -> pd.DataFrame:
     """Read to_review.csv whether it was saved by pandas, Excel (; separator) or Google Sheets."""
     df = pd.read_csv(p, sep=None, engine="python", encoding="utf-8-sig", dtype=str, keep_default_na=False)
-    for c in ("label", "note"):
+    for c in ("suggested", "why", "label", "note"):
         if c not in df:
             df[c] = ""
     return df
