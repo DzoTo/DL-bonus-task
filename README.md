@@ -43,7 +43,13 @@ predict("Бұл тауар өте нашар")   # {'text': ..., 'label': 0, 'pr
 
 The trained model is `models/model.joblib` (0.6 MB). It is committed to the repository and holds the
 fitted TF-IDF vocabulary, the classifier, the threshold and the settings. Nothing else is needed for
-inference. A Colab version is in [`notebooks/colab.ipynb`](notebooks/colab.ipynb).
+inference.
+
+**Notebooks** (both run in a fresh Google Colab runtime; locally, run `pip install jupyter` first):
+* [`notebooks/walkthrough.ipynb`](notebooks/walkthrough.ipynb) runs the whole pipeline step by step with plots: data funnel,
+  normalisation, lexicon, splits, n-grams, validation grid, threshold choice, test metrics, a traced prediction, errors, challenge set,
+  and your own comments. It is saved with outputs, so it can be read on GitHub without running it.
+* [`notebooks/colab.ipynb`](notebooks/colab.ipynb) is a minimal version: clone, predict, retrain.
 
 ## 2. Reproduce everything (about 1 minute on a laptop)
 
@@ -262,7 +268,7 @@ data/splits/        split_ids.csv + split_stats.json (committed, no text)
 models/model.joblib trained model (vectorizer + classifier + threshold)
 results/            metrics, confusion matrix, PR curve, predictions, errors, top n-grams
 tests/              pytest suite
-notebooks/          Colab notebook
+notebooks/          walkthrough.ipynb (full pipeline with plots), colab.ipynb (minimal)
 ```
 
 ## 10. AI assistance and my contribution
