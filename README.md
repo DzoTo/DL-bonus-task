@@ -13,9 +13,9 @@ $ python -m kzprofanity.predict "Тауар өте нашар, ақша босқ
 1 PROFANE  p=0.971 (threshold 0.415) | Қ*тақ бас сатушы
 ```
 
-> **Status:** the pipeline runs end to end. The numbers below come from the automatic labels. The
-> manual review of 372 hard and audit rows (`data/labeling/to_review.csv`) is still in progress.
-> After it is done, the test set is evaluated **once** and this README is updated.
+> **Labels used for the results below:** automatic lexicon labels. The 312 ambiguous rows that need a
+> human decision are left out, not guessed (see §4). Manual labeling of those rows and of 60 audit rows
+> is prepared in `data/labeling/to_review.csv`; rerunning `make_splits → train → evaluate` includes them.
 
 ---
 
@@ -109,9 +109,9 @@ KazSAnDRA 175,158 reviews
   │  remove duplicates (same letters after normalisation)       -12,010
   ▼  162,989 unique reviews
   │  scan with the lexicon (kzprofanity/lexicon.py, 45 rules)
-  ├── strong hit (unambiguous мат)            -> label 1 automatically          ~2,240
-  ├── only ambiguous/borderline hit           -> MANUAL label                    ~310
-  ├── no hit, contains a non-obscene insult   -> label 0 (hard negative)         ~380
+  ├── strong hit (unambiguous мат)            -> label 1 automatically           2,241
+  ├── only ambiguous/borderline hit           -> MANUAL label                      312
+  ├── no hit, contains a non-obscene insult   -> label 0 (hard negative)           378
   ├── no hit, 1-2 stars (angry)               -> label 0, random 2,500
   ├── no hit, 3-5 stars                       -> label 0, random 2,500
   └── audit: 30 random auto-1 + 30 random auto-0 -> MANUAL label, to measure label noise
@@ -128,15 +128,18 @@ because they caught typos (`сіге`, `сиқты`, `қаямын`, `сігіс
 `data/challenge/challenge.csv`: 40 sentences I wrote to stress-test masks, spelling variants and
 look-alikes. It is reported separately and never used for training or model selection.
 
-**Splits** (seed 42, stratified by label × manual/automatic). Current numbers, before the manual labels:
+**Total: 7,619 labeled comments**: 5,378 clean (70.6%) and 2,241 profane (29.4%).
 
-| split | rows | label 0 | label 1 |
+**Splits** (seed 42, stratified by label × manual/automatic):
+
+| split | rows | label 0 (clean) | label 1 (profane) |
 |---|---|---|---|
-| train | 5,3xx | ~3,770 | ~1,570 |
-| validation | 1,14x | ~806 | ~336 |
-| test | 1,14x | ~807 | ~334 |
+| train | 5,335 | 3,765 | 1,570 |
+| validation | 1,143 | 806 | 337 |
+| test | 1,141 | 807 | 334 |
 
-The exact numbers are in `data/splits/split_stats.json`.
+Label sources: 2,241 lexicon (strong hit) · 2,500 random clean · 2,500 clean 1-2★ (angry) · 378 hard negatives
+(insult but not мат). The full numbers are in `data/splits/split_stats.json`.
 
 * **Duplicates** are removed before splitting. Two comments count as duplicates if they have the same letters after
   `canonical()`, so case, punctuation, emoji and repeated letters are ignored.
@@ -222,27 +225,40 @@ how it *generalises*. The manually labeled rows are the honest part of the test 
 
 ## 7. Error analysis
 
-*Draft, based on development runs. Final version after the last evaluation: see `results/errors.csv`.*
+The model makes **15 mistakes on 1,141 test comments: 14 FN and 1 FP** (`results/errors.csv`, created locally).
+All of them were read by hand. They fall into four groups:
 
-1. **Label noise: the model is right and the label is wrong.** `Шешең аман болсын` ("may your mother be
-   well") was auto-labeled 1, because the rule `шешең + ам` had no word-end check. The model gave it p≈0.14.
-   Similar cases: `ámın` ("amen" in Kazakh Latin) matched `амың`, and `*здравствуйте` matched the masked `п*зд`.
-   *Fix applied:* tighter rules and a self-test for each case. *Lesson:* lexicon labels need a human audit
-   (the 60 audit rows estimate how often this happens).
-2. **The model catches profanity the lexicon missed.** Examples labeled 0 but predicted 1: `Шешенамы` (two
-   words glued), `сі#ейын`, `За#бал` (`#` as a mask), `питараздар` (`д→т`), `е блан`. These are the strongest evidence
-   that the model learned sub-word patterns and not a word list. *Fix:* added `#` as a mask and glued
-   forms, and the remaining cases go to manual labeling.
-3. **One swear word inside a long comment.** E.g. `Жетылми калган гондондар кашан дамиды ...` (long review,
-   p≈0.09). TF-IDF averages over all n-grams, so one strong word is diluted by many clean ones.
-   *Improvement:* score each sentence or window of words separately and take the maximum, or give the
-   model the maximum n-gram weight as an extra feature.
-4. **Innocent words that contain a profane n-gram.** `АЛЛАХУ АКБАР АМИН` contains `ху` and `ам`.
-   `dalbasalap` ("flailing about") shares `далб` with `далбаеб`. *Improvement:* more hard negatives with
-   these n-grams; a word-level feature next to the char n-grams.
-5. **Masks the model has rarely seen** (challenge set): `б**ть` (two masks), `х*йня`. The mask augmentation raised challenge
-   F1 from 0.82 to 0.86-0.89 in development runs, but double masks are still weak. *Improvement:* augment with 1-3
-   masks per word.
+1. **The label is wrong, and the model is right (2 of 15).**
+   * `А'уузу Биллях` ("I seek refuge in God") was auto-labeled 1, because the lexicon rule for `біля` (`бля`)
+     matched inside `Биллях`. The model said p = 0.01, which is correct.
+   * The only false positive, `Е Байт күшті қой` (p = 0.44), is labeled 0 but is actually `Ебайт` (a profane
+     interjection) split by a space, which the lexicon could not see. The model caught it.
+
+   *Reason:* lexicon labels are noisy. *Improvement:* the manual audit rows measure this noise, and the `бля` rule
+   needs an exception for `Биллях`, like the ones already added for `бильярд` and `шешең аман`.
+2. **One swear word inside a long comment (6 of 15).** E.g. a long complaint about a tariff with one masked
+   `к*таг` (p = 0.24), and two long reviews with one `нихуя` (p = 0.30 and 0.36). Missed profanity is in comments with a
+   median of **12 words**, compared with **6 words** for caught profanity. *Reason:* TF-IDF L2-normalisation spreads the weight over
+   all n-grams, so one strong word in many clean ones gets a low score. *Improvement:* score each sentence (or a
+   window of about 5 words) separately and flag the comment if any part is profane.
+3. **Just below the threshold (3 of 15).** `Хуевая игра` (p = 0.35), `… сені сігем` (p = 0.41) and `… амы шыққан …`
+   (p = 0.40) are clearly profane but fall just under the tuned threshold of 0.415. *Reason:* the threshold maximises F1 on
+   validation, which balances FP and FN. *Improvement:* for moderation, missing мат is worse than hiding a clean comment,
+   so a lower threshold (`threshold.strategy: min_recall` in `config.yaml`) or a human-review band for 0.2-0.6 is safer.
+4. **Rare or glued spellings (4 of 15).** `пздетс`, `сучка` in a short noisy comment, `шешес`, and `КАГАНДОН` (glued to
+   another word). These forms are rare in training, so their n-grams have small weights. *Improvement:* more labeled examples of spelling variants (the
+   manual review rows contain many).
+
+**Challenge set** (40 hand-written sentences, `results/challenge.csv`): the model gets all 20 clean sentences right, including
+look-alikes like `көтерме`, `педиатр`, `шешен сөйлейді` and insults like `ақымақ`, `дебил`. It misses 6 of the 20 profane ones:
+double masks (`б**ть`, `х*йня`), new spellings (`Блиаать`, `Зайыбал`), and the Kazakh words `қаншық` and `жәлеп`, which are
+almost absent from the training data. The lexicon
+scores higher here (F1 0.92 vs 0.82), because it contains those exact words. The model's advantage is that it generalises to
+forms nobody wrote a rule for (group 1 above).
+
+**What the errors mean for moderation.** With precision 0.997, almost no clean review would be hidden wrongly. With recall
+0.958, about 4 in 100 profane comments would still be published, mostly long ones. A real store would add the per-sentence
+scoring from point 2 and send uncertain cases to a moderator.
 
 ## 8. Limitations
 
@@ -253,8 +269,9 @@ how it *generalises*. The manually labeled rows are the honest part of the test 
 * The domain is mostly app-store reviews (about 89% of test). There is little data from `market`, the closest domain to
   "product reviews".
 * `canonical()` maps `қ→к`, `і→и` and so on, so a few Kazakh/Russian word pairs become identical (`көт`/`кот`).
-* The test split was inspected during development to find **labeling** bugs (items 1-2 above). Model settings
-  were never tuned on it. The final evaluation is run once after labeling is complete.
+* During development, test errors were inspected to find **labeling** bugs in the lexicon (e.g. `шешең аман`
+  "may your mother be well", `ámın` "amen", `бильярд` were wrongly labeled 1 and were fixed with self-tests).
+  Model settings and the threshold were never tuned on the test set; they come from validation only.
 
 ## 9. Repository layout
 
