@@ -1,6 +1,6 @@
 # Kazakh Profanity Detection
 
-DSSC5113 bonus project (KBTU, Fall 2026). An individual project by **`<FULL NAME>`**, student ID `<STUDENT_ID>`.
+DSSC5113 bonus project (KBTU, Fall 2026). An individual project by Nurasyl Sakayev.
 
 The model reads one Kazakh product review or comment and returns:
 
@@ -32,14 +32,14 @@ confusion matrix equals the one from `python -m kzprofanity.evaluate`.
 ## 1. Quick start
 
 ```bash
-git clone <this repo> && cd DL-bonus-task
+git clone https://github.com/DzoTo/DL-bonus-task.git && cd DL-bonus-task
 python -m venv .venv
 .venv\Scripts\activate            # Windows  (Linux/Mac: source .venv/bin/activate)
 pip install -r requirements.txt
 
 # use the saved model, no retraining needed
-python -m kzprofanity.predict "сатушы далбайоп"
-python -m kzprofanity.predict "сатушы далбайоп" --explain    # trace: text -> n-grams -> probability -> label
+python -m kzprofanity.predict "Тауар өте нашар"
+python -m kzprofanity.predict "Тауар өте нашар" --explain    # trace: text -> n-grams -> probability -> label
 python -m kzprofanity.predict --interactive                  # type your own comments
 python -m kzprofanity.predict --file my.csv --out preds.csv  # CSV with a "text" column
 ```
@@ -71,15 +71,17 @@ n-gram/C grid and the threshold strategy. Package versions are pinned in `requir
 
 ## 3. Task definition and labeling rules
 
+*Swear words in this README are partly masked with `*`; the data itself is not masked.*
+
 **1 = the comment contains profanity (мат)**, Kazakh or Russian, in any spelling. **0 = everything else**,
 including very negative or rude reviews.
 
 | Case | Rule | Example → label |
 |---|---|---|
-| Kazakh obscene words | 1 | `қотақбас ойын` → 1, `шешеңнің амы` → 1, `сігейін` → 1 |
-| Mixed language | KazSAnDRA comments are code-switched Kazakh/Russian. Russian мат *inside a Kazakh comment* counts as profanity, because readers see it the same way. | `ойын пиздец екен` → 1 |
-| Masked words | A mask (`*`, `#`, `@`, digits) that hides a letter of a profane word still counts. | `б*ять`, `к0так`, `сі#ейын` → 1 |
-| Spelling variants | Latin script, look-alike letters, repeated letters and spaced letters all count. | `qotaq`, `cyka`, `котаааак`, `с у к а` → 1 |
+| Kazakh obscene words | 1 | `қ*тақбас ойын` → 1, `шешеңнің *мы` → 1, `с*гейін` → 1 |
+| Mixed language | KazSAnDRA comments are code-switched Kazakh/Russian. Russian мат *inside a Kazakh comment* counts as profanity, because readers see it the same way. | `ойын п*здец екен` → 1 |
+| Masked words | A mask (`*`, `#`, `@`, digits) that hides a letter of a profane word still counts. | `б*ять`, `к0т*к`, `с*#ейын` → 1 |
+| Spelling variants | Latin script, look-alike letters, repeated letters and spaced letters all count. | `q*taq`, `c*ka`, `к*таааак`, `с у * а` → 1 |
 | Negative but clean | Anger, complaints and low ratings are **not** profanity. | `Тауар өте нашар, ақша босқа кетті` → 0 |
 | Insults that are not мат | Rude, but not obscene. | `ақымақ`, `есек`, `оңбаған`, `мал`, `дебил`, `идиот` → 0 |
 | Innocent look-alikes | Same letters, different word. | `көтеру`, `адам`, `аман`, `қатынас`, `педиатр`, `сукно`, `бильярд` → 0 |
@@ -90,10 +92,10 @@ Labeled examples from the dataset:
 
 | Comment (from KazSAnDRA) | Label | Why |
 |---|---|---|
-| `Қотағымды жегер ойын мынау` | 1 | Kazakh obscene word with a suffix |
-| `Сөз жоқ пиздес приложение` | 1 | Russian мат in a Kazakh sentence |
-| `Шшс пздц кызык ойын` | 1 | abbreviations of obscene phrases |
-| `Шешең аман болсын осы, ойынды шығарған адам` | 0 | "may your mother be well": `шешең` + `аман` is not `шешең амы` |
+| `Қ*тағымды жегер ойын мынау` | 1 | Kazakh obscene word with a suffix |
+| `Сөз жоқ п*здес приложение` | 1 | Russian мат in a Kazakh sentence |
+| `Шшс п*дц кызык ойын` | 1 | abbreviations of obscene phrases |
+| `Шешең аман болсын осы, ойынды шығарған адам` | 0 | "may your mother be well": `шешең` + `аман` is not `шешең *мы` |
 | `Мен мына ақымақтарға айтайын ойнай алмасаңдар...` | 0 | insult, not obscene |
 | `Тез желінеді баллон, не стоит, качество так себе` | 0 | negative review, clean |
 
@@ -118,7 +120,7 @@ KazSAnDRA 175,158 reviews
   ├── no hit, contains a non-obscene insult   -> label 0 (hard negative)           378
   ├── no hit, 1-2 stars (angry)               -> label 0, random 2,500
   ├── no hit, 3-5 stars                       -> label 0, random 2,500
-  └── audit: 30 random auto-1 + 30 random auto-0 -> MANUAL label, to measure label noise
+  └── audit: 30 random auto-1 + 30 random auto-0 -> queued for manual check (not labeled yet, see §8)
 ```
 
 The lexicon only *finds candidates*. It is **not** the classifier and **not** a model feature. It was
@@ -163,7 +165,7 @@ README were picked so that they contain no names.
 
 **TF-IDF over character n-grams + Logistic Regression** (`kzprofanity/model.py`). The reasons for this choice:
 
-* **Kazakh is agglutinative.** `қотақ`, `қотақбас`, `қотағымның` and `қотақбастарға` share the root's n-grams, so
+* **Kazakh is agglutinative.** `сатушы`, `сатушылар`, `сатушының` and `сатушыларға` share the root's n-grams, so
   unseen suffixes still score high. A word-level model would treat each form as a new word.
 * **Spelling noise is the norm.** Masks, Latin letters and typos change one or two characters, and most n-grams survive.
 * **No unknown-token problem.** Any new word is split into n-grams, and n-grams that were never seen in
@@ -177,7 +179,7 @@ README were picked so that they contain no names.
 
 1. `canonical()` (`kzprofanity/text.py`): lowercase → Kazakh Latin and Latin→Cyrillic (`q→к`, `sh→ш`) →
    digits/symbols inside words (`0→о`, `@→а`, `#→*`) → `қ→к, і→и, ң→н, ө→о, ұ/ү→у, ә→а, ғ→г, щ→ш`, drop `ь/ъ`
-   → glue spaced letters (`с у к а→сука`) → punctuation and emoji → space (`*` is kept as a mask
+   → glue spaced letters (`с у п е р→супер`) → punctuation and emoji → space (`*` is kept as a mask
    signal) → collapse repeats (`жаааман→жаман`). These are fixed rules with nothing learned, so there is no leakage.
 2. `TfidfVectorizer(analyzer="char_wb", ngram_range=(2,5), min_df=2, sublinear_tf=True)`. `char_wb` means the
    n-grams stay inside words (padded with spaces).
@@ -189,7 +191,7 @@ L2-normalisation *dilutes* one swear word in a long comment (see errors below).
 **Punctuation:** removed, except `*`. **Repeated punctuation and emoji:** removed.
 
 **Training-time augmentation** (`augment_mask_frac: 0.3`): 30% of training rows *of each class* get a
-copy where some inner letters are replaced by `*`. This teaches that `б**ть` ≈ `блять`. Both classes are
+copy where some inner letters are replaced by `*`. This teaches that `б**ть` ≈ `бл*ть`. Both classes are
 masked, so `*` alone does not mean "profane". It is applied to the training split only.
 
 **Model selection (validation only):** grid `C ∈ {0.1, 1, 10, 30, 100}` × n-grams `{(1,3), (2,5), (3,6)}`.
@@ -238,7 +240,7 @@ All of them were read by hand. They fall into four groups:
    covers, and `Е Байт күшті қой` is the profane interjection `Ебайт` split by a space. The model flags both.
    *Reason:* lexicon labels are noisy. *Improvement:* manually review the rows where the model disagrees with the label, and add
    lexicon rules for these spellings.
-2. **Innocent words containing "profane" n-grams (5 of 13, all FP).** `dalbasalap` ("flailing about", p = 0.77) shares `далб`
+2. **Innocent words containing "profane" n-grams (5 of 13, all FP).** `d*lbasalap` ("flailing about", p = 0.77) shares `д*лб`
    with a common insult; `АЛЛАХУ АКБАР АМИН` (p = 0.67) contains `ху` and `ам`; `халява` (p = 0.34) and `балшыққа белшесімен`
    (p = 0.52) share pieces with swear words; and `… 5 жұлдыз қой ам.` (p = 0.60), which I labeled 0 by hand because `ам` is a
    particle here. *Reason:* character n-grams see pieces of words, not their meaning. *Improvement:* more clean training
@@ -248,7 +250,7 @@ All of them were read by hand. They fall into four groups:
    a median of **16 words**, compared with **5 words** for caught profanity. *Reason:* TF-IDF L2-normalisation spreads the
    weight over all n-grams, so one strong word among many clean ones gets a low score. *Improvement:* score each sentence (or
    a window of about 5 words) separately and flag the comment if any part is profane.
-4. **Close to the threshold (3 of 13).** `Хуевая игра` (FN, p = 0.24 vs threshold 0.27), a one-word complaint (FP, p = 0.27),
+4. **Close to the threshold (3 of 13).** `Х*евая игра` (FN, p = 0.24 vs threshold 0.27), a one-word complaint (FP, p = 0.27),
    and a rude comment with a 🖕 emoji but no мат (FP, p = 0.41). *Reason:* any threshold leaves borderline cases on both sides.
    *Improvement:* send comments with p between about 0.2 and 0.6 to a human moderator.
 
