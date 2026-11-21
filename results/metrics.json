@@ -1,66 +1,66 @@
 {
   "test": {
-    "precision": 0.9969,
-    "recall": 0.9581,
-    "f1": 0.9771,
-    "accuracy": 0.9869,
-    "tp": 320,
-    "fp": 1,
-    "fn": 14,
-    "tn": 806,
-    "n_test": 1141,
-    "n_test_profane": 334,
-    "threshold": 0.4148,
-    "roc_auc": 0.998,
-    "average_precision": 0.9968
+    "precision": 0.9739,
+    "recall": 0.9882,
+    "f1": 0.981,
+    "accuracy": 0.9887,
+    "tp": 336,
+    "fp": 9,
+    "fn": 4,
+    "tn": 801,
+    "n_test": 1150,
+    "n_test_profane": 340,
+    "threshold": 0.2725,
+    "roc_auc": 0.9995,
+    "average_precision": 0.9988
   },
   "baselines_on_test": {
     "majority_class_0": {
       "precision": 0.0,
       "recall": 0.0,
       "f1": 0.0,
-      "accuracy": 0.7073,
+      "accuracy": 0.7043,
       "tp": 0,
       "fp": 0,
-      "fn": 334,
-      "tn": 807
+      "fn": 340,
+      "tn": 810
     },
     "lexicon_only": {
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "accuracy": 1.0,
-      "tp": 334,
+      "recall": 0.9853,
+      "f1": 0.9926,
+      "accuracy": 0.9957,
+      "tp": 335,
       "fp": 0,
-      "fn": 0,
-      "tn": 807
+      "fn": 5,
+      "tn": 810
     }
   },
   "by_label_source": {
     "auto_clean": {
-      "n": 375,
+      "n": 394,
       "precision": 0.0,
       "recall": 0.0,
       "f1": 0.0,
-      "accuracy": 0.9973,
+      "accuracy": 0.9898,
       "tp": 0,
-      "fp": 1,
+      "fp": 4,
       "fn": 0,
-      "tn": 374
+      "tn": 390
     },
     "auto_clean_angry": {
-      "n": 368,
+      "n": 365,
       "precision": 0.0,
       "recall": 0.0,
       "f1": 0.0,
-      "accuracy": 1.0,
+      "accuracy": 0.989,
       "tp": 0,
-      "fp": 0,
+      "fp": 4,
       "fn": 0,
-      "tn": 368
+      "tn": 361
     },
     "auto_hard_negative": {
-      "n": 64,
+      "n": 49,
       "precision": 0.0,
       "recall": 0.0,
       "f1": 0.0,
@@ -68,56 +68,56 @@
       "tp": 0,
       "fp": 0,
       "fn": 0,
-      "tn": 64
+      "tn": 49
     },
     "auto_lexicon": {
-      "n": 334,
+      "n": 335,
       "precision": 1.0,
-      "recall": 0.9581,
-      "f1": 0.9786,
-      "accuracy": 0.9581,
-      "tp": 320,
+      "recall": 0.9881,
+      "f1": 0.994,
+      "accuracy": 0.9881,
+      "tp": 331,
       "fp": 0,
-      "fn": 14,
+      "fn": 4,
       "tn": 0
+    },
+    "manual": {
+      "n": 7,
+      "precision": 0.8333,
+      "recall": 1.0,
+      "f1": 0.9091,
+      "accuracy": 0.8571,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "tn": 1
     }
   },
   "by_domain": {
     "appstore": {
-      "n": 987,
-      "precision": 0.9969,
-      "recall": 0.9578,
-      "f1": 0.977,
-      "accuracy": 0.9848,
-      "tp": 318,
-      "fp": 1,
-      "fn": 14,
-      "tn": 654
+      "n": 977,
+      "precision": 0.9795,
+      "recall": 0.9882,
+      "f1": 0.9838,
+      "accuracy": 0.9887,
+      "tp": 335,
+      "fp": 7,
+      "fn": 4,
+      "tn": 631
     },
     "bookstore": {
-      "n": 24,
-      "precision": 1.0,
+      "n": 26,
+      "precision": 0.3333,
       "recall": 1.0,
-      "f1": 1.0,
-      "accuracy": 1.0,
+      "f1": 0.5,
+      "accuracy": 0.9231,
       "tp": 1,
-      "fp": 0,
+      "fp": 2,
       "fn": 0,
       "tn": 23
     },
     "mapping": {
-      "n": 38,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "accuracy": 1.0,
-      "tp": 1,
-      "fp": 0,
-      "fn": 0,
-      "tn": 37
-    },
-    "market": {
-      "n": 92,
+      "n": 41,
       "precision": 0.0,
       "recall": 0.0,
       "f1": 0.0,
@@ -125,19 +125,30 @@
       "tp": 0,
       "fp": 0,
       "fn": 0,
-      "tn": 92
+      "tn": 41
+    },
+    "market": {
+      "n": 106,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 1.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 106
     }
   },
   "challenge_set": {
     "model": {
       "n": 40,
       "precision": 1.0,
-      "recall": 0.7,
-      "f1": 0.8235,
-      "accuracy": 0.85,
-      "tp": 14,
+      "recall": 0.75,
+      "f1": 0.8571,
+      "accuracy": 0.875,
+      "tp": 15,
       "fp": 0,
-      "fn": 6,
+      "fn": 5,
       "tn": 20
     },
     "lexicon_only": {
@@ -169,6 +180,6 @@
       "max_iter": 3000
     },
     "seed": 42,
-    "trained_on_rows": 6936
+    "trained_on_rows": 6973
   }
 }

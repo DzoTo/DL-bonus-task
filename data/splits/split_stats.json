@@ -1,27 +1,28 @@
 {
-  "manual_labels": 0,
-  "manual_unlabeled_left_out": 312,
+  "manual_labels": 45,
+  "manual_unlabeled_left_out": 267,
   "near_duplicate_groups": 17,
   "synthetic_rows_in_train": 0,
   "train": {
-    "rows": 5335,
-    "label_0": 3765,
-    "label_1": 1570
+    "rows": 5364,
+    "label_0": 3771,
+    "label_1": 1593
   },
   "val": {
-    "rows": 1143,
+    "rows": 1150,
     "label_0": 806,
-    "label_1": 337
+    "label_1": 344
   },
   "test": {
-    "rows": 1141,
-    "label_0": 807,
-    "label_1": 334
+    "rows": 1150,
+    "label_0": 810,
+    "label_1": 340
   },
   "label_source_counts": {
     "auto_clean": 2500,
     "auto_clean_angry": 2500,
     "auto_lexicon": 2241,
-    "auto_hard_negative": 378
+    "auto_hard_negative": 378,
+    "manual": 45
   }
 }
