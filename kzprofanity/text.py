@@ -94,8 +94,8 @@ def scrub_pii(text: str) -> str:
     """Replace links, emails, phone numbers and @usernames with placeholder tags."""
     if not isinstance(text, str):
         return ""
+    text = _EMAIL.sub("<EMAIL>", text)   # before URL: "name@mail.ru" must not become "name@<URL>"
     text = _URL.sub("<URL>", text)
-    text = _EMAIL.sub("<EMAIL>", text)
     text = _PHONE.sub("<PHONE>", text)
     text = _USER.sub("<USER>", text)
     return text.strip()

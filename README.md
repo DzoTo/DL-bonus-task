@@ -19,6 +19,17 @@ $ python -m kzprofanity.predict "Тауар өте нашар, ақша босқ
 
 ---
 
+## Main notebook: everything in one place
+
+**[`notebooks/kazakh_profanity.ipynb`](notebooks/kazakh_profanity.ipynb)**: load data → clean → normalise → label → split →
+features → train with validation grid search → threshold → test (confusion matrix, PR and ROC curves) → interpretation →
+errors → challenge set → save model → predict your own comment. **Run all** takes about 1-2 minutes, locally (`pip install jupyter`) or in
+a fresh Google Colab runtime (the first cell clones the repo). It is saved with its outputs, so all plots can be read on GitHub
+without running it.
+
+The same pipeline also exists as scripts in `kzprofanity/` (below). Both give identical results: the last notebook cell checks that its
+confusion matrix equals the one from `python -m kzprofanity.evaluate`.
+
 ## 1. Quick start
 
 ```bash
@@ -45,13 +56,7 @@ The trained model is `models/model.joblib` (0.6 MB). It is committed to the repo
 fitted TF-IDF vocabulary, the classifier, the threshold and the settings. Nothing else is needed for
 inference.
 
-**Notebooks** (both run in a fresh Google Colab runtime; locally, run `pip install jupyter` first):
-* [`notebooks/walkthrough.ipynb`](notebooks/walkthrough.ipynb) runs the whole pipeline step by step with plots: data funnel,
-  normalisation, lexicon, splits, n-grams, validation grid, threshold choice, test metrics, a traced prediction, errors, challenge set,
-  and your own comments. It is saved with outputs, so it can be read on GitHub without running it.
-* [`notebooks/colab.ipynb`](notebooks/colab.ipynb) is a minimal version: clone, predict, retrain.
-
-## 2. Reproduce everything (about 1 minute on a laptop)
+## 2. Reproduce everything with scripts (about 1 minute on a laptop)
 
 ```bash
 python -m kzprofanity.prepare_data   # download KazSAnDRA, scrub personal data, dedupe, pre-label
@@ -285,7 +290,7 @@ data/splits/        split_ids.csv + split_stats.json (committed, no text)
 models/model.joblib trained model (vectorizer + classifier + threshold)
 results/            metrics, confusion matrix, PR curve, predictions, errors, top n-grams
 tests/              pytest suite
-notebooks/          walkthrough.ipynb (full pipeline with plots), colab.ipynb (minimal)
+notebooks/          kazakh_profanity.ipynb: the whole pipeline in one notebook, with plots
 ```
 
 ## 10. AI assistance and my contribution

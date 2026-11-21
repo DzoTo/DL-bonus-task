@@ -27,6 +27,10 @@ def test_dedupe_key_ignores_case_spacing_and_repeats():
     assert dedupe_key("Керемет!!! ойын") == dedupe_key("кереемет ойын") == dedupe_key("КЕРЕМЕТ  ОЙЫН")
 
 
+def test_email_fully_removed():
+    assert scrub_pii("test.user@mail.ru") == "<EMAIL>"
+
+
 @pytest.mark.parametrize("raw", [
     "звоните +7 701 234 56 78", "пишите на test.user@mail.ru", "сайт https://kaspi.kz/shop", "@user_name айтты",
 ])
