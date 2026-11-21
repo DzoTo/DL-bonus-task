@@ -16,3 +16,4 @@ data/interim/
 data/processed/
 data/labeling/to_review.csv
 results/errors.csv
+data/labeling/to_label.txt
